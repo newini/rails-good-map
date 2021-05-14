@@ -4717,6 +4717,11 @@
   dependencies:
     "find-up" "^4.0.0"
 
+"plotly.js-dist@^1.58.4":
+  "integrity" "sha512-oXCTRJFN8FBsHZSQPYoM3LuJQchPUrf6sOXFC0EFdvcr5lmJmLcAsW74jDy9PkRpm3PB+A+2oY1hsUMmk2eZbw=="
+  "resolved" "https://registry.npmjs.org/plotly.js-dist/-/plotly.js-dist-1.58.4.tgz"
+  "version" "1.58.4"
+
 "pnp-webpack-plugin@^1.6.4":
   "integrity" "sha512-7Wjy+9E3WwLOEL30D+m8TSTF7qJJUJLONBnwQp0518siuMxUQUbgZwssaFX+QKlZkjHZcw/IpZCt/H0srrntSg=="
   "resolved" "https://registry.npmjs.org/pnp-webpack-plugin/-/pnp-webpack-plugin-1.6.4.tgz"
