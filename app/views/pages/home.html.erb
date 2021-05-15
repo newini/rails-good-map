@@ -5,7 +5,23 @@
   html,
   body {
     height: 100%;
-}
+  }
+  .custom-map-control-button {
+    appearance: button;
+    background-color: #fff;
+    border: 0;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px -1px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    margin: 10px;
+    padding: 0 0.5em;
+    height: 40px;
+    font: 400 18px Roboto, Arial, sans-serif;
+    overflow: hidden;
+  }
+  .custom-map-control-button:hover {
+    background: #ebebeb;
+  }
 </style>
 
 <script>
@@ -13,153 +29,120 @@
   // This example adds hide() and show() methods to a custom overlay's prototype.
   // These methods toggle the visibility of the container <div>.
   // overlay to or from the map.
+  let map, heatmap, infoWindow;
+
+  //var tokyo = new google.maps.LatLng(35.6681625, 139.6007829);
+
   function initMap() {
-    const map = new google.maps.Map(document.getElementById("map"), {
-      zoom: 11,
-      center: { lat: 62.323907, lng: -150.109291 },
-      mapTypeId: "satellite",
-    });
-    const bounds = new google.maps.LatLngBounds(
-      new google.maps.LatLng(62.281819, -150.287132),
-      new google.maps.LatLng(62.400471, -150.005608)
-    );
-    // The photograph is courtesy of the U.S. Geological Survey.
-    let image = "https://developers.google.com/maps/documentation/javascript/";
-    image += "examples/full/images/talkeetna.png";
 
-    // [START maps_overlay_hideshow_subclass]
+    map = new google.maps.Map(document.getElementById("map"), {
+      zoom: 16,
+      //center: tokyo,
+      center: { lat: 35.6681625, lng: 139.6007829 },
+    });
+
     /**
-     * The custom USGSOverlay object contains the USGS image,
-     * the bounds of the image, and a reference to the map.
+     * HeatMap
      */
-    class USGSOverlay extends google.maps.OverlayView {
-      constructor(bounds, image) {
-        super();
-        // [END maps_overlay_hideshow_hideshowtoggle]
-        this.bounds = bounds;
-        this.image = image;
-      }
-      // [END maps_overlay_hideshow_subclass]
-      // [START maps_overlay_hideshow_onadd]
-      /**
-       * onAdd is called when the map's panes are ready and the overlay has been
-       * added to the map.
-       */
-      onAdd() {
-        this.div = document.createElement("div");
-        this.div.style.borderStyle = "none";
-        this.div.style.borderWidth = "0px";
-        this.div.style.position = "absolute";
-        // Create the img element and attach it to the div.
-        const img = document.createElement("img");
-        img.src = this.image;
-        img.style.width = "100%";
-        img.style.height = "100%";
-        img.style.position = "absolute";
-        this.div.appendChild(img);
-        // Add the element to the "overlayLayer" pane.
-        const panes = this.getPanes();
-        panes.overlayLayer.appendChild(this.div);
-      }
-      // [END maps_overlay_hideshow_onadd]
-      // [START maps_overlay_hideshow_draw]
-      draw() {
-        // We use the south-west and north-east
-        // coordinates of the overlay to peg it to the correct position and size.
-        // To do this, we need to retrieve the projection from the overlay.
-        const overlayProjection = this.getProjection();
-        // Retrieve the south-west and north-east coordinates of this overlay
-        // in LatLngs and convert them to pixel coordinates.
-        // We'll use these coordinates to resize the div.
-        const sw = overlayProjection.fromLatLngToDivPixel(
-          this.bounds.getSouthWest()
-        );
-        const ne = overlayProjection.fromLatLngToDivPixel(
-          this.bounds.getNorthEast()
-        );
+    var heatMapData = [
+      new google.maps.LatLng(35.6682, 139.601185),
+      new google.maps.LatLng(35.669028, 139.6016839),
+      new google.maps.LatLng(35.6657186, 139.5989068)
+    ];
 
-        // Resize the image's div to fit the indicated dimensions.
-        if (this.div) {
-          this.div.style.left = sw.x + "px";
-          this.div.style.top = ne.y + "px";
-          this.div.style.width = ne.x - sw.x + "px";
-          this.div.style.height = sw.y - ne.y + "px";
-        }
-      }
-      // [END maps_overlay_hideshow_draw]
-      // [START maps_overlay_hideshow_onremove]
-      /**
-       * The onRemove() method will be called automatically from the API if
-       * we ever set the overlay's map property to 'null'.
-       */
-      onRemove() {
-        if (this.div) {
-          this.div.parentNode.removeChild(this.div);
-          delete this.div;
-        }
-      }
-      // [END maps_overlay_hideshow_onremove]
-      // [START maps_overlay_hideshow_hideshowtoggle]
-      /**
-       *  Set the visibility to 'hidden' or 'visible'.
-       */
-      hide() {
-        if (this.div) {
-          this.div.style.visibility = "hidden";
-        }
-      }
-      show() {
-        if (this.div) {
-          this.div.style.visibility = "visible";
-        }
-      }
-      toggle() {
-        if (this.div) {
-          if (this.div.style.visibility === "hidden") {
-            this.show();
-          } else {
-            this.hide();
+    const gradient = [
+"rgba(255, 255, 187, 0)",
+"rgb(240, 249, 174)",
+"rgb(224, 243, 161)",
+"rgb(209, 238, 148)",
+"rgb(194, 232, 135)",
+"rgb(178, 226, 122)",
+"rgb(163, 220, 109)",
+"rgb(148, 215, 96)",
+"rgb(132, 209, 83)",
+"rgb(117, 203, 70)",
+"rgb(101, 197, 57)",
+"rgb(86, 191, 44)",
+"rgb(71, 186, 31)",
+"rgb(55, 180, 18)",
+"rgb(40, 174, 5)"
+    ];
+
+    heatmap = new google.maps.visualization.HeatmapLayer({
+      data: heatMapData,
+      gradient: gradient,
+      map: null,
+      radius: 100,
+      opacity: 0.5
+    });
+
+    function toggleHeatmap() {
+      heatmap.setMap(heatmap.getMap() ? null : map);
+    };
+
+    const toggleHeatmap_btn = document.createElement("button");
+    toggleHeatmap_btn.textContent = "Toggle heatmap";
+    toggleHeatmap_btn.classList.add("custom-map-control-button");
+    toggleHeatmap_btn.addEventListener("click", () => {
+      toggleHeatmap();
+    });
+    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(toggleHeatmap_btn);
+
+    /**
+     * Geolocation
+     */
+    infoWindow = new google.maps.InfoWindow();
+    const locationButton = document.createElement("button");
+    locationButton.textContent = "Pan to Current Location";
+    locationButton.classList.add("custom-map-control-button");
+    map.controls[google.maps.ControlPosition.TOP_CENTER].push(
+      locationButton
+    );
+    locationButton.addEventListener("click", () => {
+      // Try HTML5 geolocation.
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const pos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            };
+            infoWindow.setPosition(pos);
+            infoWindow.setContent("Location found.");
+            infoWindow.open(map);
+            map.setCenter(pos);
+          },
+          () => {
+            handleLocationError(true, infoWindow, map.getCenter());
           }
-        }
+        );
+      } else {
+        // Browser doesn't support Geolocation
+        handleLocationError(false, infoWindow, map.getCenter());
       }
-      toggleDOM(map) {
-        if (this.getMap()) {
-          this.setMap(null);
-        } else {
-          this.setMap(map);
-        }
-      }
-    }
-    // [START maps_overlay_hideshow_init]
-    const overlay = new USGSOverlay(bounds, image);
-    overlay.setMap(map);
-    // [END maps_overlay_hideshow_init]
-    // [START maps_overlay_hideshow_controls]
-    const toggleButton = document.createElement("button");
-    toggleButton.textContent = "Toggle";
-    toggleButton.classList.add("custom-map-control-button");
-    const toggleDOMButton = document.createElement("button");
-    toggleDOMButton.textContent = "Toggle DOM Attachment";
-    toggleDOMButton.classList.add("custom-map-control-button");
-    toggleButton.addEventListener("click", () => {
-      overlay.toggle();
     });
-    toggleDOMButton.addEventListener("click", () => {
-      overlay.toggleDOM(map);
-    });
-    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(toggleDOMButton);
-    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(toggleButton);
-    // [END maps_overlay_hideshow_controls]
   }
-  // [END maps_overlay_hideshow]
+
+  function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+    infoWindow.setPosition(pos);
+    infoWindow.setContent(
+      browserHasGeolocation
+        ? "Error: The Geolocation service failed."
+        : "Error: Your browser doesn't support geolocation."
+    );
+    infoWindow.open(map);
+  }
 </script>
 
 <div class='container-fluid' style='height: 100%;'>
+
   <div id="map"></div>
 
   <!-- Async script executes immediately and must be after any DOM elements used in callback. -->
   <script
-       src="https://maps.googleapis.com/maps/api/js?key=<%= Rails.application.credentials.GOOGLE_API_KEY %>&callback=initMap&libraries=&v=weekly"
+       src="https://maps.googleapis.com/maps/api/js?key=<%= Rails.application.credentials.GOOGLE_API_KEY %>&callback=initMap&&libraries=visualization&v=weekly"
     async
   ></script>
+
 </div>
+
