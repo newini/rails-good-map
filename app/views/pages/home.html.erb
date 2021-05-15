@@ -45,9 +45,13 @@
      * HeatMap
      */
     var heatMapData = [
-      new google.maps.LatLng(35.6682, 139.601185),
-      new google.maps.LatLng(35.669028, 139.6016839),
-      new google.maps.LatLng(35.6657186, 139.5989068)
+      <% @place_lat_lng_arr.each_with_index do |p, index| %>
+        <% if index != @place_lat_lng_arr.count-1 %>
+          new google.maps.LatLng(<%= p[:lat] %>, <%= p[:lng] %>),
+        <% else %>
+          new google.maps.LatLng(<%= p[:lat] %>, <%= p[:lng] %>)
+        <% end %>
+      <% end %>
     ];
 
     const gradient = [
