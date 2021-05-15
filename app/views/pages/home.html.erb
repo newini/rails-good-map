@@ -22,13 +22,34 @@
   .custom-map-control-button:hover {
     background: #ebebeb;
   }
+
+  #floating-panel {
+    position: absolute;
+    top: 10px;
+    left: 25%;
+    z-index: 5;
+    background-color: #fff;
+    padding: 5px;
+    border: 1px solid #999;
+    text-align: center;
+    font-family: "Roboto", "sans-serif";
+    line-height: 30px;
+    padding-left: 10px;
+  }
+
+  #floating-panel {
+    background-color: #fff;
+    border: 1px solid #999;
+    left: 25%;
+    padding: 5px;
+    position: absolute;
+    top: 10px;
+    z-index: 5;
+  }
 </style>
 
 <script>
-  // [START maps_overlay_hideshow]
-  // This example adds hide() and show() methods to a custom overlay's prototype.
-  // These methods toggle the visibility of the container <div>.
-  // overlay to or from the map.
+
   let map, heatmap, infoWindow;
 
   //var tokyo = new google.maps.LatLng(35.6681625, 139.6007829);
@@ -75,22 +96,10 @@
     heatmap = new google.maps.visualization.HeatmapLayer({
       data: heatMapData,
       gradient: gradient,
-      map: null,
+      map: map,
       radius: 100,
       opacity: 0.5
     });
-
-    function toggleHeatmap() {
-      heatmap.setMap(heatmap.getMap() ? null : map);
-    };
-
-    const toggleHeatmap_btn = document.createElement("button");
-    toggleHeatmap_btn.textContent = "Toggle heatmap";
-    toggleHeatmap_btn.classList.add("custom-map-control-button");
-    toggleHeatmap_btn.addEventListener("click", () => {
-      toggleHeatmap();
-    });
-    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(toggleHeatmap_btn);
 
     /**
      * Geolocation
@@ -136,9 +145,39 @@
     );
     infoWindow.open(map);
   }
+
+  /**
+   * Buttons
+   */
+  function toggleEducationMap() {
+    var url = '/get_places_json?lat='+map.getCenter().lat()
+      +'&lng='+map.getCenter().lng()
+      +'&keyword='+'school';
+
+    var heatMapData = heatmap.getData();
+    heatMapData.clear();
+
+    fetch(url)
+      .then(response => response.json())
+      .then(function(data) {
+        var objCount = data.length;
+        for ( var x=0; x < objCount ; x++ ) {
+          var cur_item = data[x];
+          heatMapData.push( new google.maps.LatLng(cur_item.lat, cur_item.lng) );
+        };
+      });
+    console.log( heatmap )
+    //heatmap.setMap(heatmap.getMap() ? null : map);
+    heatmap.setData(heatMapData);
+  };
+
 </script>
 
 <div class='container-fluid' style='height: 100%;'>
+
+  <div id="floating-panel">
+    <button onclick="toggleEducationMap()">Toggle Education Map</button>
+  </div>
 
   <div id="map"></div>
 
